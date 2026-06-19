@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NEXUS PANEL — Global Design System
+   Sakura/Pink Dark Gamer Mode (#ff69b4 pink, #ff1493 accent)
+══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --nexus-bg:          #060210;
+  --nexus-surface:     rgba(15, 7, 22, 0.72);
+  --nexus-surface-2:   rgba(30, 14, 46, 0.78);
+  --nexus-border:      rgba(255, 105, 180, 0.18);
+  --nexus-text:        #fff0f5;
+  --nexus-muted:       #bfa3cb;
+  --nexus-pink:        #ff69b4;
+  --nexus-accent:      #ff1493;
+  --nexus-red:         #ff3366;
+  --nexus-yellow:      #ffd700;
+  --nexus-glow-pink:   0 0 22px rgba(255, 105, 180, 0.45);
+  --nexus-glow-accent: 0 0 28px rgba(255, 20, 147, 0.6);
+  
+  /* Legacy aliases mapping to pink/accent so existing components don't break */
+  --nexus-green:       #ff69b4;
+  --nexus-blue:        #ff1493;
+  --nexus-glow-green:  0 0 22px rgba(255, 105, 180, 0.45);
+  --nexus-glow-blue:   0 0 28px rgba(255, 20, 147, 0.6);
+}
+
+@theme inline {
+  --color-nexus-bg:       var(--nexus-bg);
+  --color-nexus-surface:  var(--nexus-surface);
+  --color-nexus-surface2: var(--nexus-surface-2);
+  --color-nexus-border:   var(--nexus-border);
+  --color-nexus-text:     var(--nexus-text);
+  --color-nexus-muted:    var(--nexus-muted);
+  --color-nexus-green:    var(--nexus-green);
+  --color-nexus-blue:     var(--nexus-blue);
+  --color-nexus-pink:     var(--nexus-pink);
+  --color-nexus-accent:   var(--nexus-accent);
+  --color-nexus-red:      var(--nexus-red);
+  --color-nexus-yellow:   var(--nexus-yellow);
+  --font-sans:            var(--font-outfit), "Outfit", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--nexus-bg);
+  color: var(--nexus-text);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--nexus-bg); }
+::-webkit-scrollbar-thumb { background: var(--nexus-surface-2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--nexus-green); }
+
+/* ── Neon text utilities ───────────────────────────────────────────────── */
+.neon-green {
+  color: var(--nexus-green);
+  text-shadow: 0 0 10px rgba(0,255,136,0.5);
+}
+.neon-blue {
+  color: var(--nexus-blue);
+  text-shadow: 0 0 10px rgba(0,212,255,0.5);
+}
+
+/* ── Glass card ────────────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(17,24,39,0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--nexus-border);
+  border-radius: 12px;
+  transition: border-color 0.2s ease;
+}
+.glass-card:hover {
+  border-color: rgba(0,255,136,0.2);
+}
+
+/* ── Neon button ───────────────────────────────────────────────────────── */
+.btn-neon {
+  background: linear-gradient(135deg, var(--nexus-green), var(--nexus-blue));
+  color: #0a0e1a;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  transition: opacity 0.2s, box-shadow 0.2s, transform 0.1s;
+  box-shadow: var(--nexus-glow-green);
+}
+.btn-neon:hover { opacity: 0.9; box-shadow: var(--nexus-glow-blue); transform: translateY(-1px); }
+.btn-neon:active { transform: translateY(0); }
+.btn-neon:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ── Progress bar ──────────────────────────────────────────────────────── */
+.progress-track {
+  background: var(--nexus-surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+  height: 6px;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--nexus-green), var(--nexus-blue));
+  border-radius: 999px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px rgba(0,255,136,0.6);
+}
+
+/* ── Badge ─────────────────────────────────────────────────────────────── */
+.badge-green { background: rgba(0,255,136,0.15); color: var(--nexus-green); border: 1px solid rgba(0,255,136,0.3); border-radius: 999px; padding: 2px 10px; font-size: 0.75rem; font-weight: 600; }
+.badge-blue  { background: rgba(0,212,255,0.15); color: var(--nexus-blue);  border: 1px solid rgba(0,212,255,0.3); border-radius: 999px; padding: 2px 10px; font-size: 0.75rem; font-weight: 600; }
+.badge-red   { background: rgba(255,68,102,0.15); color: var(--nexus-red);  border: 1px solid rgba(255,68,102,0.3); border-radius: 999px; padding: 2px 10px; font-size: 0.75rem; font-weight: 600; }
+
+/* ── Animated grid background ──────────────────────────────────────────── */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255,105,180,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,105,180,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Input ─────────────────────────────────────────────────────────────── */
+.nexus-input {
+  background: var(--nexus-surface-2);
+  border: 1px solid var(--nexus-border);
+  border-radius: 8px;
+  color: var(--nexus-text);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  width: 100%;
+  transition: border-color 0.2s;
+  outline: none;
+}
+.nexus-input:focus { border-color: var(--nexus-green); box-shadow: 0 0 0 2px rgba(0,255,136,0.1); }
+.nexus-input::placeholder { color: var(--nexus-muted); }
+
+/* ── Table ─────────────────────────────────────────────────────────────── */
+.nexus-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.nexus-table th { background: var(--nexus-surface-2); color: var(--nexus-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.75rem 1rem; text-align: left; }
+.nexus-table th:first-child { border-radius: 8px 0 0 8px; }
+.nexus-table th:last-child  { border-radius: 0 8px 8px 0; }
+.nexus-table td { padding: 0.875rem 1rem; border-bottom: 1px solid var(--nexus-border); font-size: 0.875rem; }
+.nexus-table tr:hover td { background: rgba(255,255,255,0.02); }
+.nexus-table tr:last-child td { border-bottom: none; }
+
+/* ── Sidebar link ──────────────────────────────────────────────────────── */
+.sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.875rem; border-radius: 8px; color: var(--nexus-muted); font-size: 0.875rem; font-weight: 500; transition: all 0.2s; cursor: pointer; text-decoration: none; }
+.sidebar-link:hover { background: var(--nexus-surface-2); color: var(--nexus-text); }
+.sidebar-link.active { background: rgba(0,255,136,0.1); color: var(--nexus-green); border: 1px solid rgba(0,255,136,0.2); }
