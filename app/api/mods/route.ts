@@ -31,26 +31,64 @@ export async function POST(req: NextRequest) {
     const description = (formData.get("description") as string) ?? "";
     const isRequired = formData.get("is_required") !== "false";
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
-    }
+    const customUrl = formData.get("custom_url") as string | null;
+    const customFilename = formData.get("filename") as string | null;
+    const customSha256 = formData.get("sha256") as string | null;
+    const customMd5 = formData.get("md5") as string | null;
+    const customSizeBytes = formData.get("size_bytes") as string | null;
+
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
-    if (!file.name.endsWith(".jar")) {
-      return NextResponse.json(
-        { error: "Only .jar files are allowed" },
-        { status: 400 }
-      );
+
+    let finalFilename = "";
+    let finalUrl = "";
+    let finalSha256 = "";
+    let finalMd5 = "";
+    let finalSizeBytes = 0;
+
+    if (customUrl) {
+      if (!customFilename || !customSha256 || !customMd5 || !customSizeBytes) {
+        return NextResponse.json(
+          { error: "Para enlaces externos, debes ingresar: Nombre de archivo, SHA256, MD5 y Tamaño." },
+          { status: 400 }
+        );
+      }
+      if (!customFilename.endsWith(".jar")) {
+        return NextResponse.json(
+          { error: "El nombre de archivo debe terminar en .jar" },
+          { status: 400 }
+        );
+      }
+      finalFilename = customFilename;
+      finalUrl = customUrl;
+      finalSha256 = customSha256;
+      finalMd5 = customMd5;
+      finalSizeBytes = parseInt(customSizeBytes, 10);
+    } else {
+      if (!file) {
+        return NextResponse.json({ error: "No file provided" }, { status: 400 });
+      }
+      if (!file.name.endsWith(".jar")) {
+        return NextResponse.json(
+          { error: "Only .jar files are allowed" },
+          { status: 400 }
+        );
+      }
+
+      // Read file bytes
+      const bytes = Buffer.from(await file.arrayBuffer());
+      const { md5, sha256 } = computeHashes(bytes);
+      
+      finalFilename = file.name;
+      finalSha256 = sha256;
+      finalMd5 = md5;
+      finalSizeBytes = bytes.byteLength;
+
+      // Upload to storage
+      const { publicUrl } = await uploadMod(file.name, bytes);
+      finalUrl = publicUrl;
     }
-
-    // Read file bytes
-    const bytes = Buffer.from(await file.arrayBuffer());
-    const { md5, sha256 } = computeHashes(bytes);
-    const size_bytes = bytes.byteLength;
-
-    // Upload to storage
-    const { publicUrl } = await uploadMod(file.name, bytes);
 
     // Upsert into database (by filename — allows re-upload to update hash)
     const { data, error } = await supabaseAdmin
@@ -58,13 +96,13 @@ export async function POST(req: NextRequest) {
       .upsert(
         {
           name,
-          filename: file.name,
+          filename: finalFilename,
           version,
           description,
-          md5,
-          sha256,
-          size_bytes,
-          r2_url: publicUrl,
+          md5: finalMd5,
+          sha256: finalSha256,
+          size_bytes: finalSizeBytes,
+          r2_url: finalUrl,
           is_required: isRequired,
           is_enabled: true,
         },

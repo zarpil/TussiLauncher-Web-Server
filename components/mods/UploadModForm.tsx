@@ -2,18 +2,31 @@
 
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, X, CheckCircle, AlertCircle, Loader2, Link, FileUp } from "lucide-react";
 
 interface UploadModFormProps {
   onSuccess: () => void;
 }
 
 export function UploadModForm({ onSuccess }: UploadModFormProps) {
-  const [file, setFile] = useState<File | null>(null);
+  const [isExternal, setIsExternal] = useState(false);
+  
+  // Commons
   const [name, setName] = useState("");
   const [version, setVersion] = useState("");
   const [description, setDescription] = useState("");
   const [isRequired, setIsRequired] = useState(true);
+  
+  // File upload mode
+  const [file, setFile] = useState<File | null>(null);
+  
+  // External link mode
+  const [externalUrl, setExternalUrl] = useState("");
+  const [filename, setFilename] = useState("");
+  const [sha256, setSha256] = useState("");
+  const [md5, setMd5] = useState("");
+  const [sizeBytes, setSizeBytes] = useState("");
+
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -34,18 +47,27 @@ export function UploadModForm({ onSuccess }: UploadModFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return;
+    if (!isExternal && !file) return;
 
     setUploading(true);
     setProgress(10);
 
     try {
       const fd = new FormData();
-      fd.append("file", file);
       fd.append("name", name);
       fd.append("version", version);
       fd.append("description", description);
       fd.append("is_required", String(isRequired));
+
+      if (isExternal) {
+        fd.append("custom_url", externalUrl);
+        fd.append("filename", filename);
+        fd.append("sha256", sha256);
+        fd.append("md5", md5);
+        fd.append("size_bytes", sizeBytes);
+      } else if (file) {
+        fd.append("file", file);
+      }
 
       setProgress(40);
       const res = await fetch("/api/mods", { method: "POST", body: fd });
@@ -53,7 +75,7 @@ export function UploadModForm({ onSuccess }: UploadModFormProps) {
 
       if (!res.ok) {
         const { error } = await res.json();
-        throw new Error(error ?? "Upload failed");
+        throw new Error(error ?? "Error al subir/guardar el mod");
       }
 
       setProgress(100);
@@ -63,6 +85,11 @@ export function UploadModForm({ onSuccess }: UploadModFormProps) {
         setName("");
         setVersion("");
         setDescription("");
+        setExternalUrl("");
+        setFilename("");
+        setSha256("");
+        setMd5("");
+        setSizeBytes("");
         setStatus("idle");
         setProgress(0);
         onSuccess();
@@ -77,52 +104,146 @@ export function UploadModForm({ onSuccess }: UploadModFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Dropzone */}
-      <div
-        {...getRootProps()}
-        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all
-          ${isDragActive
-            ? "border-[var(--nexus-green)] bg-[rgba(0,255,136,0.05)]"
-            : "border-[var(--nexus-border)] hover:border-[rgba(0,255,136,0.4)] hover:bg-[rgba(0,255,136,0.02)]"
+      {/* Tab Selector */}
+      <div className="flex border-b border-[var(--nexus-border)] mb-4">
+        <button
+          type="button"
+          onClick={() => setIsExternal(false)}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold border-b-2 transition-all ${
+            !isExternal
+              ? "border-[var(--nexus-pink)] text-[var(--nexus-text)]"
+              : "border-transparent text-[var(--nexus-muted)] hover:text-[var(--nexus-text)]"
           }`}
-      >
-        <input {...getInputProps()} />
-        {file ? (
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[rgba(0,255,136,0.1)] flex items-center justify-center">
-              <CheckCircle size={20} className="text-[var(--nexus-green)]" />
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-medium text-[var(--nexus-text)]">{file.name}</p>
-              <p className="text-xs text-[var(--nexus-muted)]">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-            </div>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setFile(null); }}
-              className="ml-auto text-[var(--nexus-muted)] hover:text-[var(--nexus-red)]"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-2">
-            <Upload size={32} className="text-[var(--nexus-muted)]" />
-            <p className="text-sm text-[var(--nexus-muted)]">
-              {isDragActive ? "Suelta el archivo aquí" : "Arrastra un .jar o haz clic para seleccionar"}
-            </p>
-          </div>
-        )}
+        >
+          <FileUp size={14} /> Subir Archivo (.jar)
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsExternal(true)}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold border-b-2 transition-all ${
+            isExternal
+              ? "border-[var(--nexus-pink)] text-[var(--nexus-text)]"
+              : "border-transparent text-[var(--nexus-muted)] hover:text-[var(--nexus-text)]"
+          }`}
+        >
+          <Link size={14} /> Enlace Externo (Google Drive, etc.)
+        </button>
       </div>
+
+      {/* File Mode or External Mode */}
+      {!isExternal ? (
+        /* Dropzone */
+        <div
+          {...getRootProps()}
+          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all
+            ${isDragActive
+              ? "border-[var(--nexus-pink)] bg-[rgba(255,105,180,0.05)]"
+              : "border-[var(--nexus-border)] hover:border-[rgba(255,105,180,0.4)] hover:bg-[rgba(255,105,180,0.02)]"
+            }`}
+        >
+          <input {...getInputProps()} />
+          {file ? (
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-[rgba(255,105,180,0.1)] flex items-center justify-center">
+                <CheckCircle size={20} className="text-[var(--nexus-pink)]" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-[var(--nexus-text)]">{file.name}</p>
+                <p className="text-xs text-[var(--nexus-muted)]">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                className="ml-auto text-[var(--nexus-muted)] hover:text-[var(--nexus-red)]"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <Upload size={32} className="text-[var(--nexus-muted)]" />
+              <p className="text-sm text-[var(--nexus-muted)]">
+                {isDragActive ? "Suelta el archivo aquí" : "Arrastra un .jar o haz clic para seleccionar"}
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* External Link Inputs */
+        <div className="space-y-3 p-4 rounded-xl border border-[var(--nexus-border)] bg-[rgba(255,255,255,0.01)]">
+          <div>
+            <label className="block text-xs text-[var(--nexus-muted)] mb-1">URL de descarga directa *</label>
+            <input
+              type="url"
+              className="nexus-input"
+              value={externalUrl}
+              onChange={(e) => setExternalUrl(e.target.value)}
+              placeholder="https://drive.google.com/uc?export=download&id=..."
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-[var(--nexus-muted)] mb-1">Nombre de archivo (ej. mod.jar) *</label>
+              <input
+                type="text"
+                className="nexus-input"
+                value={filename}
+                onChange={(e) => setFilename(e.target.value)}
+                placeholder="decocraft-3.0.11-1.21.1-neoforge.jar"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--nexus-muted)] mb-1">Tamaño en bytes *</label>
+              <input
+                type="number"
+                className="nexus-input"
+                value={sizeBytes}
+                onChange={(e) => setSizeBytes(e.target.value)}
+                placeholder="93170262"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-[var(--nexus-muted)] mb-1">Hash SHA-256 *</label>
+              <input
+                type="text"
+                className="nexus-input font-mono text-xs"
+                value={sha256}
+                onChange={(e) => setSha256(e.target.value)}
+                placeholder="b0589eb7d03b13bbf3b9..."
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--nexus-muted)] mb-1">Hash MD5 *</label>
+              <input
+                type="text"
+                className="nexus-input font-mono text-xs"
+                value={md5}
+                onChange={(e) => setMd5(e.target.value)}
+                placeholder="dd7e3bb25bfa6d7863..."
+                required
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Fields */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-[var(--nexus-muted)] mb-1">Nombre *</label>
+          <label className="block text-xs text-[var(--nexus-muted)] mb-1">Nombre para mostrar *</label>
           <input
             className="nexus-input"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="OptiFine"
+            placeholder="Decocraft"
             required
           />
         </div>
@@ -132,7 +253,7 @@ export function UploadModForm({ onSuccess }: UploadModFormProps) {
             className="nexus-input"
             value={version}
             onChange={(e) => setVersion(e.target.value)}
-            placeholder="1.20.4"
+            placeholder="3.0.11"
           />
         </div>
       </div>
@@ -153,7 +274,7 @@ export function UploadModForm({ onSuccess }: UploadModFormProps) {
           id="isRequired"
           checked={isRequired}
           onChange={(e) => setIsRequired(e.target.checked)}
-          className="w-4 h-4 accent-[var(--nexus-green)]"
+          className="w-4 h-4 accent-[var(--nexus-pink)]"
         />
         <label htmlFor="isRequired" className="text-sm text-[var(--nexus-text)]">
           Mod obligatorio
@@ -161,7 +282,7 @@ export function UploadModForm({ onSuccess }: UploadModFormProps) {
       </div>
 
       {/* Progress */}
-      {uploading && (
+      {uploading && !isExternal && (
         <div className="space-y-1">
           <div className="progress-track">
             <div className="progress-fill" style={{ width: `${progress}%` }} />
@@ -172,8 +293,8 @@ export function UploadModForm({ onSuccess }: UploadModFormProps) {
 
       {/* Status */}
       {status === "success" && (
-        <div className="flex items-center gap-2 text-[var(--nexus-green)] text-sm">
-          <CheckCircle size={16} /> Mod subido correctamente
+        <div className="flex items-center gap-2 text-[var(--nexus-pink)] text-sm">
+          <CheckCircle size={16} /> Mod guardado correctamente
         </div>
       )}
       {status === "error" && (
@@ -185,10 +306,10 @@ export function UploadModForm({ onSuccess }: UploadModFormProps) {
       <button
         type="submit"
         className="btn-neon w-full flex items-center justify-center gap-2 py-2.5"
-        disabled={!file || uploading}
+        disabled={(!isExternal && !file) || uploading}
       >
         {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-        {uploading ? "Subiendo..." : "Subir Mod"}
+        {uploading ? "Guardando..." : "Guardar Mod"}
       </button>
     </form>
   );

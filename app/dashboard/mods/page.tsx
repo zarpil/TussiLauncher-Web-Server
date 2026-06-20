@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Trash2, ToggleLeft, ToggleRight, RefreshCw, Plus, Package } from "lucide-react";
+import { Trash2, ToggleLeft, ToggleRight, RefreshCw, Plus, Package, Search } from "lucide-react";
 import { UploadModForm } from "@/components/mods/UploadModForm";
 
 interface Mod {
@@ -27,6 +27,7 @@ export default function ModsPage() {
   const [mods, setMods] = useState<Mod[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
+  const [search, setSearch] = useState("");
 
   const fetchMods = useCallback(async () => {
     setLoading(true);
@@ -52,6 +53,11 @@ export default function ModsPage() {
     await fetch(`/api/mods/${id}`, { method: "DELETE" });
     fetchMods();
   };
+
+  const filteredMods = mods.filter((mod) =>
+    mod.name.toLowerCase().includes(search.toLowerCase()) ||
+    mod.filename.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div>
@@ -81,11 +87,25 @@ export default function ModsPage() {
         </div>
       </div>
 
+      {/* Search Bar */}
+      <div className="mb-6 flex gap-2">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--nexus-muted)]" size={15} />
+          <input
+            type="text"
+            placeholder="Buscar mod por nombre o archivo..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="nexus-input pl-9"
+          />
+        </div>
+      </div>
+
       {/* Upload form */}
       {showUpload && (
         <div className="glass-card p-5 mb-6">
           <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
-            <Package size={15} className="text-[var(--nexus-green)]" />
+            <Package size={15} className="text-[var(--nexus-pink)]" />
             Subir Nuevo Mod
           </h2>
           <UploadModForm onSuccess={() => { setShowUpload(false); fetchMods(); }} />
@@ -103,6 +123,11 @@ export default function ModsPage() {
             <Package size={40} strokeWidth={1} />
             <p className="text-sm">No hay mods todavía. Sube el primero.</p>
           </div>
+        ) : filteredMods.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-48 gap-3 text-[var(--nexus-muted)]">
+            <Search size={40} strokeWidth={1} />
+            <p className="text-sm">No se encontraron mods que coincidan con "{search}"</p>
+          </div>
         ) : (
           <table className="nexus-table">
             <thead>
@@ -117,7 +142,7 @@ export default function ModsPage() {
               </tr>
             </thead>
             <tbody>
-              {mods.map((mod) => (
+              {filteredMods.map((mod) => (
                 <tr key={mod.id}>
                   <td>
                     <div className="font-medium text-[var(--nexus-text)]">{mod.name}</div>
@@ -136,7 +161,7 @@ export default function ModsPage() {
                       className="flex items-center gap-1.5"
                     >
                       {mod.is_enabled ? (
-                        <><ToggleRight size={18} className="text-[var(--nexus-green)]" /><span className="badge-green">Activo</span></>
+                        <><ToggleRight size={18} className="text-[var(--nexus-pink)]" /><span className="badge-pink">Activo</span></>
                       ) : (
                         <><ToggleLeft size={18} className="text-[var(--nexus-muted)]" /><span className="badge-red">Inactivo</span></>
                       )}
