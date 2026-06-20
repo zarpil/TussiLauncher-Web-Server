@@ -5,6 +5,7 @@ import { useState } from "react";
 import {
   LayoutDashboard,
   Package,
+  Sparkles,
   Newspaper,
   Settings,
   ExternalLink,
@@ -12,10 +13,11 @@ import {
 } from "lucide-react";
 
 const NAV = [
-  { href: "/dashboard",       label: "Overview",    icon: LayoutDashboard },
-  { href: "/dashboard/mods",  label: "Mods",        icon: Package },
-  { href: "/dashboard/news",  label: "Noticias",    icon: Newspaper },
-  { href: "/dashboard/config",label: "Configuración",icon: Settings },
+  { href: "/dashboard",         label: "Overview",      icon: LayoutDashboard },
+  { href: "/dashboard/mods",    label: "Mods",          icon: Package },
+  { href: "/dashboard/shaders", label: "Shaders",       icon: Sparkles },
+  { href: "/dashboard/news",    label: "Noticias",      icon: Newspaper },
+  { href: "/dashboard/config",  label: "Configuración", icon: Settings },
 ];
 
 export function Sidebar() {

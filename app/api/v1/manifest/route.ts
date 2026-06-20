@@ -29,6 +29,15 @@ export async function GET() {
 
     if (newsError) throw newsError;
 
+    // ── Fetch shaders ───────────────────────────────────────────────────────
+    const { data: shaders, error: shadersError } = await supabaseAdmin
+      .from("shaders")
+      .select("filename, r2_url, md5, sha256, size_bytes")
+      .eq("is_enabled", true)
+      .order("name");
+
+    if (shadersError) throw shadersError;
+
     // ── Fetch server config ─────────────────────────────────────────────────
     const { data: config, error: configError } = await supabaseAdmin
       .from("server_config")
@@ -57,6 +66,13 @@ export async function GET() {
         sha256: m.sha256,
         size_bytes: m.size_bytes,
         required: m.is_required,
+      })),
+      shaders: (shaders ?? []).map((s) => ({
+        filename: s.filename,
+        url: s.r2_url,
+        md5: s.md5,
+        sha256: s.sha256,
+        size_bytes: s.size_bytes,
       })),
       news: (news ?? []).map((n) => ({
         id: n.id,

@@ -32,10 +32,19 @@ export interface ManifestGameConfig {
   mod_loader_installer_url?: string | null;
 }
 
+export interface ManifestShader {
+  filename: string;
+  url: string;
+  md5: string;
+  sha256: string;
+  size_bytes: number;
+}
+
 export interface NexusManifest {
   version: string;
   generated_at: string;
   game: ManifestGameConfig;
   mods: ManifestMod[];
+  shaders?: ManifestShader[];
   news: ManifestNewsItem[];
 }

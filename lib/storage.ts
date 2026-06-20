@@ -50,6 +50,42 @@ export async function deleteMod(filename: string): Promise<void> {
 }
 
 /**
+ * Upload a shader .zip file to Supabase Storage.
+ * Returns the public URL for the file.
+ */
+export async function uploadShader(
+  filename: string,
+  data: Buffer | Uint8Array,
+  contentType = "application/zip"
+): Promise<UploadResult> {
+  const path = `shaders/${filename}`;
+
+  const { error } = await supabaseAdmin.storage
+    .from(BUCKET)
+    .upload(path, data, {
+      contentType,
+      upsert: true,
+    });
+
+  if (error) throw new Error(`Storage upload failed: ${error.message}`);
+
+  const {
+    data: { publicUrl },
+  } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
+
+  return { publicUrl, path };
+}
+
+/**
+ * Delete a shader .zip file from Supabase Storage.
+ */
+export async function deleteShader(filename: string): Promise<void> {
+  const path = `shaders/${filename}`;
+  const { error } = await supabaseAdmin.storage.from(BUCKET).remove([path]);
+  if (error) throw new Error(`Storage delete failed: ${error.message}`);
+}
+
+/**
  * Upload a news cover image.
  */
 export async function uploadNewsCover(
