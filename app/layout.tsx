@@ -6,7 +6,7 @@ const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 export const metadata: Metadata = {
   title: "Tussi Panel — Minecraft Server Admin",
-  description: "Sakura/Pink edition administration panel for Tussi Minecraft Launcher",
+  description: "Admin panel for Tussi Minecraft Launcher",
 };
 
 export default function RootLayout({
